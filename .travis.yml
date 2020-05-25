@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mgeriesa/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run mgeriesa/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t mgeriesa/multi-client ./client
+  - docker build -t mgeriesa/multi-nginx ./nginx
+  - docker build -t mgeriesa/multi-server ./server
+  - docker build -t mgeriesa/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push mgeriesa/multi-client
+  - docker push mgeriesa/multi-nginx
+  - docker push mgeriesa/multi-server
+  - docker push mgeriesa/multi-worker
+  
+
